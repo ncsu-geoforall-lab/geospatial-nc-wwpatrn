@@ -26,4 +26,4 @@ jobs:
         python --version
     - name: Install the module
       run: |
-        grass --tmp-location XY --exec g.extension extension=${{ github.event.repository.name }} url=. --verbose
+        grass --tmp-location XY --exec g.extension extension=run url=. --verbose
