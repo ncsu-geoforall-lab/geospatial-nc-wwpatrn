@@ -39,6 +39,26 @@ import sys
 import grass.script as gs
 
 
+def create_isochrones(cost, isochrones, max_time_s):
+    """Create contours"""
+    n_steps = 20
+    step = max_time_s / n_steps
+    gs.run_command(
+        "r.contour", input=cost, output=isochrones, step=step, min=0, max=max_time_s
+    )
+
+
+def time_choropleth(raster_network, cost, max_time_s, network_buffer, masked_cost):
+    """Create choropleth map from cost (time) surface"""
+    gs.run_command(
+        "r.buffer", input=raster_network, output=network_buffer, distance=300
+    )
+    gs.mapcalc(
+        f"{masked_cost} = if({network_buffer}, round({cost} / {max_time_s}, 0.5), null())"
+    )
+    gs.run_command("r.colors", map=masked_cost, color="roygbiv")
+
+
 def main():
     """Parse command line and run processing"""
     options, unused_flags = gs.parser()
@@ -56,10 +76,11 @@ def main():
 
     # generate simplified isochrones using cost surface
 
+    # Get average resolution.
     current_region = gs.region()
     resolution = (current_region["nsres"] + current_region["ewres"]) / 2
 
-    # convert sewer network to raster using velocity - here just constant=1
+    # Convert sewer network to raster using velocity.
     gs.run_command(
         "v.to.rast",
         input=network,
@@ -67,10 +88,12 @@ def main():
         use="attr",
         attribute_column=velocity_column,
     )
-    # convert to cost (time per cell)
+    # Convert velocity to cost (time per cell).
     # cell_length/velocity
     gs.mapcalc(f"{base_cost} = {resolution} / {raster_network}")
-    # ten we run cumulative cost with wwtp as start point - I used point at the end of the pipe, not the station, which is off
+    # Cumulative cost with wwtp as start point.
+    # Note that the point at the end of the pipe should be used,
+    # not the station or sampling point, which is/can be off.
     gs.run_command(
         "r.cost",
         flags="k",
@@ -79,22 +102,17 @@ def main():
         null_cost=20,
         start_coordinates=coordinates,
     )
-    # create 3hr contours
-    max_time_h = 12
-    max_time_s = max_time_h * 60 * 60
-    n_steps = 20
-    step = max_time_s / n_steps
-    gs.run_command(
-        "r.contour", input=cost, output=isochrones, step=step, min=0, max=max_time_s
+    # Create contours
+    max_time_h = 12  # hours
+    max_time_s = max_time_h * 60 * 60  # seconds
+    create_isochrones(cost=max_time_s, isochrones=isochrones, max_time_s=max_time_s)
+    time_choropleth(
+        raster_network=raster_network,
+        cost=cost,
+        max_time_s=max_time_s,
+        network_buffer=network_buffer,
+        masked_cost=masked_cost,
     )
-
-    gs.run_command(
-        "r.buffer", input=raster_network, output=network_buffer, distance=300
-    )
-    gs.mapcalc(
-        f"{masked_cost} = if({network_buffer}, round({cost} / {max_time_s}, 0.5), null())"
-    )
-    gs.run_command("r.colors", map=masked_cost, color="roygbiv")
 
 
 if __name__ == "__main__":
