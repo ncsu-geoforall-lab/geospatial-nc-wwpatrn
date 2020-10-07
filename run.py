@@ -20,8 +20,8 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #% keyword: time
 #% keyword: network
 #%end
-##%option G_OPT_R_ELEV
-##%end
+#%option G_OPT_R_ELEV
+#%end
 #%option G_OPT_V_INPUT
 #% label: Sewer network
 #%end
@@ -37,6 +37,22 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 import sys
 
 import grass.script as gs
+
+
+def slope_along_lines(lines, elevation, slope):
+    """Compute slope as raster along vector lines from elevation"""
+    plain_slope = "plain_slope"
+    plain_aspect = "plain_aspect"
+    lines_direction = "lines_direction"
+    gs.run_command(
+        "v.to.rast", input=lines, type="line", output=lines_direction, use="dir"
+    )
+    gs.run_command(
+        "r.slope.aspect", elevation=elevation, slope=plain_slope, aspect=plain_aspect
+    )
+    gs.mapcalc(
+        f"{slope} = abs(atan(tan({plain_slope}) * cos({plain_aspect} - {lines_direction})))"
+    )
 
 
 def create_isochrones(cost, isochrones, max_time_s):
@@ -61,12 +77,15 @@ def time_choropleth(raster_network, cost, max_time_s, network_buffer, masked_cos
 
 def main():
     """Parse command line and run processing"""
+    # Allow for many variables here to process options.
+    # pylint: disable=too-many-locals
     options, unused_flags = gs.parser()
     network = options["input"]
     velocity_column = options["column"]
     cost = options["output"]
     isochrones = "isochrones"  # options["output"]
 
+    slope = "network_slope"
     raster_network = "raster_network"
     network_buffer = "network_buffer"
     masked_cost = "masked_cost"
@@ -80,6 +99,9 @@ def main():
     current_region = gs.region()
     resolution = (current_region["nsres"] + current_region["ewres"]) / 2
 
+    # TODO: Correct slope units so that it fits with the velocity computation.
+    slope_along_lines(elevation=options["elevation"], lines=network, slope=slope)
+
     # Convert sewer network to raster using velocity.
     gs.run_command(
         "v.to.rast",
@@ -88,6 +110,7 @@ def main():
         use="attr",
         attribute_column=velocity_column,
     )
+
     # Convert velocity to cost (time per cell).
     # cell_length/velocity
     gs.mapcalc(f"{base_cost} = {resolution} / {raster_network}")
@@ -105,7 +128,7 @@ def main():
     # Create contours
     max_time_h = 12  # hours
     max_time_s = max_time_h * 60 * 60  # seconds
-    create_isochrones(cost=max_time_s, isochrones=isochrones, max_time_s=max_time_s)
+    create_isochrones(cost=cost, isochrones=isochrones, max_time_s=max_time_s)
     time_choropleth(
         raster_network=raster_network,
         cost=cost,
