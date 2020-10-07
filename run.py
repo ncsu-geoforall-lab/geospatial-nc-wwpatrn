@@ -34,7 +34,7 @@ import grass.script as gs
 
 def main():
     """Parse command line and run processing"""
-    options, flags = gs.parser()
+    options, unused_flags = gs.parser()
     network = options["input"]
     cost = options["output"]
     isochrones = "isochrones"  # options["output"]
