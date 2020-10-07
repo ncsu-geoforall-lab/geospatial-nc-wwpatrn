@@ -1,0 +1,29 @@
+name: CI
+
+on:
+- push
+- pull_request
+
+jobs:
+  build:
+
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Install apt dependencies
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y -qq grass grass-dev grass-doc
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+    - name: Get versions of GRASS GIS and Python
+      run: |
+        grass --version
+        python3 --version
+        python --version
+    - name: Install the module
+      run: |
+        grass --tmp-location XY --exec g.extension extension=${{ github.event.repository.name }} url=. --verbose
