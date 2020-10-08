@@ -56,7 +56,8 @@ def slope_along_lines(lines, elevation, slope):
         "r.slope.aspect", elevation=elevation, slope=plain_slope, aspect=plain_aspect
     )
     gs.mapcalc(
-        f"{slope} = abs(atan(tan({plain_slope}) * cos({plain_aspect} - {lines_direction})))"
+        f"{slope}"
+        f" = abs(atan(tan({plain_slope}) * cos({plain_aspect} - {lines_direction})))"
     )
 
 
@@ -75,7 +76,8 @@ def time_choropleth(raster_network, cost, max_time_s, network_buffer, masked_cos
         "r.buffer", input=raster_network, output=network_buffer, distance=300
     )
     gs.mapcalc(
-        f"{masked_cost} = if({network_buffer}, round({cost} / {max_time_s}, 0.5), null())"
+        f"{masked_cost}"
+        f" = if({network_buffer}, round({cost} / {max_time_s}, 0.5), null())"
     )
     gs.run_command("r.colors", map=masked_cost, color="roygbiv")
 
@@ -123,7 +125,11 @@ def main():
         attribute_column=options["hydraulic_radius_column"],
     )
 
-    gs.mapcalc(f"velocity = (1.49 / roughness) * pow(hydraulic_radius, 2. / 3) * pow({slope}, 1. / 2)")
+    gs.mapcalc(
+        "velocity = (1.49 / roughness)"
+        " * pow(hydraulic_radius, 2. / 3)"
+        f" * pow({slope}, 1. / 2)"
+    )
     # gs.mapcalc(f"flow = cs_area * velocity")
 
     # Convert velocity to cost (time per cell).
