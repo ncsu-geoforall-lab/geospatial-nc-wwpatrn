@@ -26,7 +26,12 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #% label: Sewer network
 #%end
 #%option G_OPT_DB_COLUMN
-#% label: Velocity column
+#% key: roughness_column
+#% label: Manning roughness coefficient column
+#%end
+#%option G_OPT_DB_COLUMN
+#% key: hydraulic_radius_column
+#% label: Hydraulic radius (rH) column
 #%end
 #%option G_OPT_R_OUTPUT
 #%end
@@ -81,17 +86,17 @@ def main():
     # pylint: disable=too-many-locals
     options, unused_flags = gs.parser()
     network = options["input"]
-    velocity_column = options["column"]
     cost = options["output"]
-    isochrones = "isochrones"  # options["output"]
 
+    isochrones = "isochrones"  # options["output"]
     slope = "network_slope"
-    raster_network = "raster_network"
     network_buffer = "network_buffer"
     masked_cost = "masked_cost"
     base_cost = "base_cost"
 
     coordinates = options["coordinates"]
+
+    # TODO: Check: vector type, column names
 
     # generate simplified isochrones using cost surface
 
@@ -106,14 +111,24 @@ def main():
     gs.run_command(
         "v.to.rast",
         input=network,
-        output=raster_network,
+        output="roughness",
         use="attr",
-        attribute_column=velocity_column,
+        attribute_column=options["roughness_column"],
     )
+    gs.run_command(
+        "v.to.rast",
+        input=network,
+        output="hydraulic_radius",
+        use="attr",
+        attribute_column=options["hydraulic_radius_column"],
+    )
+
+    gs.mapcalc(f"velocity = (1.49 / roughness) * pow(hydraulic_radius, 2. / 3) * pow({slope}, 1. / 2)")
+    # gs.mapcalc(f"flow = cs_area * velocity")
 
     # Convert velocity to cost (time per cell).
     # cell_length/velocity
-    gs.mapcalc(f"{base_cost} = {resolution} / {raster_network}")
+    gs.mapcalc(f"{base_cost} = {resolution} / velocity")
     # Cumulative cost with wwtp as start point.
     # Note that the point at the end of the pipe should be used,
     # not the station or sampling point, which is/can be off.
@@ -130,7 +145,7 @@ def main():
     max_time_s = max_time_h * 60 * 60  # seconds
     create_isochrones(cost=cost, isochrones=isochrones, max_time_s=max_time_s)
     time_choropleth(
-        raster_network=raster_network,
+        raster_network="velocity",
         cost=cost,
         max_time_s=max_time_s,
         network_buffer=network_buffer,
