@@ -28,10 +28,12 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #%option G_OPT_DB_COLUMN
 #% key: roughness_column
 #% label: Manning roughness coefficient column
+#% required: yes
 #%end
 #%option G_OPT_DB_COLUMN
 #% key: hydraulic_radius_column
 #% label: Hydraulic radius (rH) column
+#% required: yes
 #%end
 #%option G_OPT_R_OUTPUT
 #%end
@@ -113,6 +115,7 @@ def main():
     gs.run_command(
         "v.to.rast",
         input=network,
+        type="line",
         output="roughness",
         use="attr",
         attribute_column=options["roughness_column"],
@@ -120,6 +123,7 @@ def main():
     gs.run_command(
         "v.to.rast",
         input=network,
+        type="line",
         output="hydraulic_radius",
         use="attr",
         attribute_column=options["hydraulic_radius_column"],
