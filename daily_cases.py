@@ -8,6 +8,7 @@ from os.path import isfile
 from os.path import join as path_join
 import re
 import csv
+import argparse
 
 
 def extract_date_from_file_name(filename):
@@ -57,19 +58,64 @@ def files_in_dir(path):
     files.sort()
     return files
 
+
+def two_column_csv_to_dict(filename, key_column, value_column):
+    """Create a dictionary from two columns in a CSV
+
+    Contents of CSV:
+
+    key1,value1
+    key2,value2
+
+    results in dict:
+
+    key1: value1
+    key2: value2
+    """
+    table = {}
+    # Using encoding to deal with UTF-8 with BOM. A better solution would be just
+    # to avoid BOM.
+    with open(path_join(filename), newline="", encoding="utf-8-sig") as csvfile:
+        reader = csv.DictReader(csvfile, delimiter=",")
+        for row in reader:
+            try:
+                table[row[key_column]] = row[value_column]
+            except KeyError as err:
+                names = ", ".join(reader.fieldnames)
+                raise KeyError(f"Missing a column in CSV header ({names}): {err}")
+    return table
+
+
 def main():
     """Reads directory of CSVs specified in the command line"""
     # Allow more variables for the main function.
     # pylint: disable=too-many-locals
-    path = sys.argv[1]
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument("directory", help="Directory with WRAL CSV data files")
+    parser.add_argument(
+        "--proportions",
+        help="CSV with ZIP codes (ZIPNUM) and population proportions (NRRF_proportion)",
+    )
+    args = parser.parse_args()
+
     date_column = "date"
     input_zip_column = "ZIPCode"
     output_zip_column_prefix = "zip_code_"
     input_value_column = "Cases"
 
+    path = args.directory
     output = []
     zip_codes = set()
     files = files_in_dir(path)
+
+    proportion_table = None
+    if args.proportions:
+        proportion_table = two_column_csv_to_dict(
+            filename=args.proportions,
+            key_column="ZIPNUM",
+            value_column="NRRF_proportion",
+        )
 
     for file in files:
         if not file.endswith(".csv"):
@@ -83,9 +129,23 @@ def main():
             output_row[date_column] = date
             for row in input_csv:
                 zip_code = row[input_zip_column]
+                value = row[input_value_column]
+                # Modify the value.
+                if proportion_table:
+                    if zip_code not in proportion_table:
+                        # Skip ZIP codes which are not in the proportion table.
+                        continue
+                    # Convert value to number only when needed allowing for no data
+                    # and other non-numeric values to pass through when not computing
+                    # proportions.
+                    # Converging to float and not int as some values are stated with a
+                    # decimal point, e.g., 208.0.
+                    value = float(value)
+                    proportion = float(proportion_table[zip_code])
+                    value *= proportion
+                # Modify the ZIP code to work well as a column name.
                 zip_code = f"{output_zip_column_prefix}{zip_code}"
                 zip_codes.add(zip_code)
-                value = row[input_value_column]
                 output_row[zip_code] = value
             output.append(output_row)
     # possibly sort by date
