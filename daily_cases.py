@@ -82,7 +82,9 @@ def two_column_csv_to_dict(filename, key_column, value_column):
                 table[row[key_column]] = row[value_column]
             except KeyError as err:
                 names = ", ".join(reader.fieldnames)
-                raise KeyError(f"Missing a column in CSV header ({names}): {err}")
+                raise KeyError(
+                    f"Missing a column in the CSV header ({names}): {err}"
+                ) from err
     return table
 
 
