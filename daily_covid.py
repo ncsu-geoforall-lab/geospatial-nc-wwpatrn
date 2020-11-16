@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+"""Extract daily cases of COVID from WRAL CSV files"""
+
 import sys
 from os import listdir
 from os.path import isfile
@@ -9,10 +11,16 @@ import csv
 
 
 def extract_date_from_file_name(filename):
-    # nc_zip0817.csv
-    # nc_zip202010012351.csv
-    # nc_zip202010021115.csv
-    # nc_zip202010021215.csv
+    """Create a date (str) from a filename
+
+    Understands these two formats:
+    nc_zip0817.csv
+    nc_zip202010012351.csv
+
+    Time is ignored, so multiple times for one day just result in the same day.
+    nc_zip202010021115.csv
+    nc_zip202010021215.csv
+    """
     result = re.match(r"nc_zip(\d+).csv", filename)
     raw_date = result.group(1)
     result = re.match(r"([\d]{4})([\d]{2})([\d]{2})([\d]{2})([\d]{2})", raw_date)
@@ -28,8 +36,31 @@ def extract_date_from_file_name(filename):
     return "-".join([str(i) for i in [year, month, day]])
 
 
-def main():
+def write_as_csv(table, date_column, zip_codes):
+    """Write the table as a CSV file.
 
+    date_column (str) and zip_codes (list of str) are column names
+    which need to match column names in the table.
+    """
+    with open("output.csv", "w", newline="") as csvfile:
+        output_csv = csv.DictWriter(
+            csvfile, delimiter=",", fieldnames=[date_column] + zip_codes
+        )
+        output_csv.writeheader()
+        for row in table:
+            output_csv.writerow(row)
+
+
+def files_in_dir(path):
+    """Get sorted list of files in a directory"""
+    files = [f for f in listdir(path) if isfile(path_join(path, f))]
+    files.sort()
+    return files
+
+def main():
+    """Reads directory of CSVs specified in the command line"""
+    # Allow more variables for the main function.
+    # pylint: disable=too-many-locals
     path = sys.argv[1]
     date_column = "date"
     input_zip_column = "ZIPCode"
@@ -38,9 +69,7 @@ def main():
 
     output = []
     zip_codes = set()
-
-    files = [f for f in listdir(path) if isfile(path_join(path, f))]
-    files.sort()
+    files = files_in_dir(path)
 
     for file in files:
         if not file.endswith(".csv"):
@@ -61,13 +90,7 @@ def main():
             output.append(output_row)
     # possibly sort by date
 
-    with open("output.csv", "w", newline="") as csvfile:
-        output_csv = csv.DictWriter(
-            csvfile, delimiter=",", fieldnames=[date_column] + list(zip_codes)
-        )
-        output_csv.writeheader()
-        for row in output:
-            output_csv.writerow(row)
+    write_as_csv(output, date_column, list(zip_codes))
 
 
 if __name__ == "__main__":
