@@ -29,7 +29,9 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 
 #%option G_OPT_R_INPUT
 #% key: velocity
-#% label: Input velocity raster
+#% label: Input velocity raster (network)
+#% description: Cost choropleth is not masked when not provided
+#% required: now
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -71,20 +73,31 @@ import grass.script as gs
 
 def create_isochrones(cost, isochrones, max_time, time_step):
     """Create contours"""
+    # Starts at half of the interval to match the choropleth.
     gs.run_command(
-        "r.contour", input=cost, output=isochrones, step=time_step, min=0, max=max_time
+        "r.contour",
+        input=cost,
+        output=isochrones,
+        step=time_step,
+        min=time_step / 2,
+        max=max_time,
     )
 
 
-def time_choropleth(raster_network, cost, time_step, network_buffer, masked_choropleth):
+def time_choropleth(
+    cost, time_step, masked_choropleth, raster_network=None, network_buffer=None
+):
     """Create choropleth map from cost (time) surface"""
-    gs.run_command(
-        "r.buffer", input=raster_network, output=network_buffer, distance=300
-    )
-    gs.mapcalc(
-        f"{masked_choropleth}"
-        f" = if({network_buffer}, round({cost} / 3600, {time_step}), null())"
-    )
+    if raster_network:
+        gs.run_command(
+            "r.buffer", input=raster_network, output=network_buffer, distance=300
+        )
+    value_expression = f"{time_step} + round({cost} / 3600, {time_step})"
+    if raster_network:
+        main_expression = f"if({network_buffer}, {value_expression}, null())"
+    else:
+        main_expression = value_expression
+    gs.mapcalc(f"{masked_choropleth} = {main_expression}")
     gs.run_command("r.colors", map=masked_choropleth, color="roygbiv")
 
 
