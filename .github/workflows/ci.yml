@@ -24,6 +24,9 @@ jobs:
         grass --version
         python3 --version
         python --version
-    - name: Install the module
+    - name: Try interface of all the scripts with GRASS interface
       run: |
-        grass --tmp-location XY --exec g.extension extension=run url=. --verbose
+        for script in compute_cost.py compute_flow_columns.py create_visualization_helpers.py
+        do
+            grass --tmp-location XY --exec $script --help
+        done

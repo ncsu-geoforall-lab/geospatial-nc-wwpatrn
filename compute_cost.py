@@ -8,13 +8,13 @@
 #            License (>=v2). Read the file COPYING that comes with GRASS
 #            for details.
 
-"""Geospatial processing for the WWPatRN project in GRASS GIS
+"""Core of geospatial processing for the WWPatRN project in GRASS GIS
 
 This executable script is a GRASS GIS module to run in a GRASS GIS session.
 """
 
 #%module
-#% description: Computes isochrones from collection point in a sewershed
+#% description: Computes cost surface from collection point in a sewershed
 #% keyword: raster
 #% keyword: cost surface
 #% keyword: time
@@ -63,27 +63,6 @@ def slope_along_lines(lines, elevation, slope):
     )
 
 
-def create_isochrones(cost, isochrones, max_time_s):
-    """Create contours"""
-    n_steps = 20
-    step = max_time_s / n_steps
-    gs.run_command(
-        "r.contour", input=cost, output=isochrones, step=step, min=0, max=max_time_s
-    )
-
-
-def time_choropleth(raster_network, cost, max_time_s, network_buffer, masked_cost):
-    """Create choropleth map from cost (time) surface"""
-    gs.run_command(
-        "r.buffer", input=raster_network, output=network_buffer, distance=300
-    )
-    gs.mapcalc(
-        f"{masked_cost}"
-        f" = if({network_buffer}, round({cost} / {max_time_s}, 0.5), null())"
-    )
-    gs.run_command("r.colors", map=masked_cost, color="roygbiv")
-
-
 def main():
     """Parse command line and run processing"""
     # Allow for many variables here to process options.
@@ -92,17 +71,12 @@ def main():
     network = options["input"]
     cost = options["output"]
 
-    isochrones = "isochrones"  # options["output"]
     slope = "network_slope"
-    network_buffer = "network_buffer"
-    masked_cost = "masked_cost"
     base_cost = "base_cost"
 
     coordinates = options["coordinates"]
 
     # TODO: Check: vector type, column names
-
-    # generate simplified isochrones using cost surface
 
     # Get average resolution.
     current_region = gs.region()
@@ -149,17 +123,6 @@ def main():
         output=cost,
         null_cost=20,
         start_coordinates=coordinates,
-    )
-    # Create contours
-    max_time_h = 12  # hours
-    max_time_s = max_time_h * 60 * 60  # seconds
-    create_isochrones(cost=cost, isochrones=isochrones, max_time_s=max_time_s)
-    time_choropleth(
-        raster_network="velocity",
-        cost=cost,
-        max_time_s=max_time_s,
-        network_buffer=network_buffer,
-        masked_cost=masked_cost,
     )
 
 
