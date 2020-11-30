@@ -115,7 +115,7 @@ def main():
     time_step_h = float(options["time_step"])  # hours
     time_step_s = time_step_h * 60 * 60  # seconds
     create_isochrones(
-        cost=cost, isochrones=isochrones, max_time=max_time_s, time_step=time_step_s,
+        cost=cost, isochrones=isochrones, max_time=max_time_s, time_step=time_step_s
     )
     time_choropleth(
         raster_network=velocity,

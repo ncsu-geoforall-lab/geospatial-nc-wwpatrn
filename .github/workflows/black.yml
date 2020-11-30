@@ -19,6 +19,11 @@ jobs:
       run: |
         python3 -m pip install --upgrade pip
         pip3 install black
+    - name: Print versions
+      run: |
+        black --version
+        python --version
+        python3 --version
     - name: Check code style with Black 
       run: |
         black --check --diff .
