@@ -14,11 +14,13 @@ jobs:
     - name: Install apt dependencies
       run: |
         sudo apt-get update -qq
-        sudo apt-get install -y -qq grass grass-dev grass-doc python3-six
+        sudo apt-get install -y -qq grass grass-dev grass-doc
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: 3.8
+    - name: Get Python dependencies
+      run: pip install six
     - name: Print version numbers
       run: |
         grass --version
