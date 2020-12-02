@@ -31,12 +31,14 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #% key: velocity
 #% label: Input velocity raster (network)
 #% description: Cost choropleth is not masked when not provided
-#% required: now
+#% required: no
 #%end
 
 #%option G_OPT_R_OUTPUT
 #% key: isochrones
 #% label: Output isochrones raster
+#% description: Takes significant amount of time to compute
+#% required: no
 #%end
 
 #%option G_OPT_R_OUTPUT
@@ -46,8 +48,13 @@ This executable script is a GRASS GIS module to run in a GRASS GIS session.
 #%end
 
 #%option G_OPT_R_OUTPUT
-#% key: masked_choropleth
+#% key: raster_choropleth
 #% label: Output masked and rounded cost raster
+#%end
+
+#%option G_OPT_V_OUTPUT
+#% key: vector_choropleth
+#% label: Output vector for choropleth visualization
 #%end
 
 #%option
@@ -85,7 +92,7 @@ def create_isochrones(cost, isochrones, max_time, time_step):
 
 
 def time_choropleth(
-    cost, time_step, masked_choropleth, raster_network=None, network_buffer=None
+    cost, time_step, raster_choropleth, raster_network=None, network_buffer=None
 ):
     """Create choropleth map from cost (time) surface"""
     if raster_network:
@@ -97,8 +104,29 @@ def time_choropleth(
         main_expression = f"if({network_buffer}, {value_expression}, null())"
     else:
         main_expression = value_expression
-    gs.mapcalc(f"{masked_choropleth} = {main_expression}")
-    gs.run_command("r.colors", map=masked_choropleth, color="roygbiv")
+    gs.mapcalc(f"{raster_choropleth} = {main_expression}")
+    gs.run_command("r.colors", map=raster_choropleth, color="roygbiv")
+
+
+def choropleth_to_vector(raster_choropleth, vector_choropleth):
+    gs.run_command(
+        "r.to.vect",
+        input=raster_choropleth,
+        output=vector_choropleth,
+        type="area",
+        column="time",
+        flags="s",
+    )
+    gs.run_command(
+        "v.colors", map=vector_choropleth, use="attr", column="time", color="roygbiv"
+    )
+    gs.run_command("v.db.addcolumn", map=vector_choropleth, columns="flow TEXT")
+    gs.run_command(
+        "v.db.pyupdate",
+        map=vector_choropleth,
+        column="flow",
+        expression="f'{time * 30:.0f} minutes'",
+    )
 
 
 def main():
@@ -108,22 +136,28 @@ def main():
     velocity = options["velocity"]
     isochrones = options["isochrones"]
     network_buffer = options["network_buffer"]
-    masked_choropleth = options["masked_choropleth"]
+    raster_choropleth = options["raster_choropleth"]
+    vector_choropleth = options["vector_choropleth"]
 
     max_time_h = float(options["max_time"])  # hours
     max_time_s = max_time_h * 60 * 60  # seconds
     time_step_h = float(options["time_step"])  # hours
     time_step_s = time_step_h * 60 * 60  # seconds
-    create_isochrones(
-        cost=cost, isochrones=isochrones, max_time=max_time_s, time_step=time_step_s
-    )
+    if isochrones:
+        create_isochrones(
+            cost=cost, isochrones=isochrones, max_time=max_time_s, time_step=time_step_s
+        )
     time_choropleth(
         raster_network=velocity,
         cost=cost,
         time_step=time_step_h,
         network_buffer=network_buffer,
-        masked_choropleth=masked_choropleth,
+        raster_choropleth=raster_choropleth,
     )
+    if vector_choropleth:
+        choropleth_to_vector(
+            raster_choropleth=raster_choropleth, vector_choropleth=vector_choropleth
+        )
 
 
 if __name__ == "__main__":
