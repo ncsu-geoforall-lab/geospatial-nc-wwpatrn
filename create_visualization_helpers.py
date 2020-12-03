@@ -109,6 +109,10 @@ def time_choropleth(
 
 
 def choropleth_to_vector(raster_choropleth, vector_choropleth):
+    """Convert raster choropleth to a vector with color table
+
+    Adds a column flow with flow time in minutes as a string including the unit.
+    """
     gs.run_command(
         "r.to.vect",
         input=raster_choropleth,
