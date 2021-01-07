@@ -4,7 +4,8 @@
 
 ### Main software
 
-Install GRASS GIS 7.8.
+Install GRASS GIS 7.8. It is needed for all processing except the daily COVID
+cases table which just needs pure Python.
 
 ### Extensions
 
@@ -16,13 +17,14 @@ g.extension v.db.pyupdate
 
 v.out.keplergl module is not in addons yet, so you need to take the script manually
 from a GitHub repo and specify path to it when you want to run it.
-The script is in this repo: https://github.com/ncsu-geoforall-lab/v.out.keplergl/
+The script is in this repo: <https://github.com/ncsu-geoforall-lab/v.out.keplergl/>.
+This is optional dependency for visualization (and publishing).
 
 ## Run
 
 ### Flow within a sewershed
 
-See the file `run.sh` for individual steps to do in GRASS GIS.
+See the file `travel_time_workflow.sh` for individual steps to do in GRASS GIS.
 The file shows that most steps can be done running modules or scripts in command line.
 
 The scripts behave like GRASS GIS modules in the sense that in command line
@@ -36,11 +38,11 @@ which might be good especially for the first-time exploration of the script.
 Use the following command to execute the script:
 
 ```
-python daily_cases.py nc-covid-data/zip_level_data/time_series_data/csv/
+python daily_cases_for_day_zip.py nc-covid-data/zip_level_data/time_series_data/csv/
 ```
 
 where `python` is whatever path or way you use to run Python scripts,
-`daily_cases.py` is the path to the script, and
+`daily_cases_for_day_zip.py` is the path to the script, and
 `nc-covid-data/zip_level_data/time_series_data/csv/` is the path to the directory with
 WRAL Data Desk CSV files.
 
@@ -48,7 +50,7 @@ To compute cases proportional to sewershed population, a separate CSV file
 with ZIP code - proportion pairs as rows can be specified:
 
 ```
-python daily_cases.py nc-covid-data/... --proportions data/proportions.csv
+python daily_cases_for_day_zip.py nc-covid-data/... --proportions data/proportions.csv
 ```
 
 This also results in the output table containing only the ZIP codes with specified
