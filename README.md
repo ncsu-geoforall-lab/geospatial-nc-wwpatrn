@@ -83,6 +83,10 @@ This workflow assumes you have vector points with precipitation for each day (or
 in attribute columns and that you have sewersheds a vector areas (polygons).
 The workflow is captured in the file `precipitation_mean_workflow.sh`.
 
+The core of this workflow is newly developed *v.vect.stats.multi*.
+The workflow could be simplified by employing *v.in.csv* used in the
+other precipitation workflow for import.
+
 The resulting CSV looks something like this:
 
 id/name... | date_2020_05_15 | date_2020_05_16 | ...
