@@ -60,9 +60,10 @@ WRAL Data Desk CSV files from <https://github.com/wraldata/nc-covid-data>.
 
 The resulting CSV table looks something like this:
 
-date | zip_code_27101 | zip_code_27102 | zip_code_27103 | ...
-2020-05-01 | 3 | 4 | 3 | ...
-2020-05-02 | 1 | 5 | 8 | ...
+date | zip_code_27101 | zip_code_27102 | zip_code_27103 | ... |
+--- | --- | --- | --- | --- |
+2020-05-01 | 3 | 4 | 3 | ... |
+2020-05-02 | 1 | 5 | 8 | ... |
 
 To compute cases proportional to sewershed population, a separate CSV file
 with ZIP code - proportion pairs as rows can be specified:
@@ -85,6 +86,7 @@ The workflow is captured in the file `precipitation_mean_workflow.sh`.
 The resulting CSV looks something like this:
 
 id/name... | date_2020_05_15 | date_2020_05_16 | ...
+--- | --- | --- | ---
 Sewershed ABC | 15.2 | 0 | ...
 
 #### Sewersheds precipitation using rnoaa
