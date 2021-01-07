@@ -28,7 +28,7 @@ jobs:
         python --version
     - name: Try interface of all the scripts with GRASS interface
       run: |
-        for script in compute_cost.py compute_flow_columns.py create_visualization_helpers.py
+        for script in travel_time_cost_surface.py  travel_time_flow_columns.py  travel_time_visualization_helpers.py
         do
             grass --tmp-location XY --exec ./$script --help
         done
