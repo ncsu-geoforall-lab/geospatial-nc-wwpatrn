@@ -1,3 +1,9 @@
+#!/usr/bin/env bash
+
+# This script is not meant for running automatically,
+# but it provides information on which steps need to be done.
+
+# Run the R script WWTPclimdata.R from R.
 
 # Clean the CSVs
 m.csv.cleanup input="raw/WWTPsamplingsites - Sampling Sites.csv" output=WWTPsamplingsites.csv cell_clean=strip_whitespace
