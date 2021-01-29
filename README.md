@@ -30,6 +30,18 @@ from a GitHub repo and specify path to it when you want to run it.
 The script is in this repo: <https://github.com/ncsu-geoforall-lab/v.out.keplergl/>.
 This is optional dependency for visualization (and publishing).
 
+For running the sewershed workflow in R, you need:
+
+```
+install.packages("raster")
+install.packages("dismo")
+install.packages("rgdal")
+install.packages("sp")
+install.packages("sf")
+install.packages("usdm")
+install.packages("rgrass7")
+```
+
 The rnoaa-based workflow requires R package `rnoaa`.
 
 ## Workflows
