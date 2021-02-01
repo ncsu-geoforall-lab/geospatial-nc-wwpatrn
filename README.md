@@ -14,7 +14,13 @@ For the rnoaa-based precipitation data retrieval, R is needed.
 Install extensions, e.g., from command line:
 
 ```
+g.extension r.in.usgs
 g.extension v.db.pyupdate
+```
+
+For the precipitation mean workflow, you need:
+
+```
 g.extension v.vect.stats.multi
 ```
 
@@ -25,10 +31,12 @@ g.extension m.csv.clean
 g.extension v.in.csv
 ```
 
-v.out.keplergl module is not in addons yet, so you need to take the script manually
-from a GitHub repo and specify path to it when you want to run it.
+v.out.keplergl module, needed for the full sewershed workflow,
+is not in GRASS Addons yet, so you need to take the script manually
+from a GitHub repo and specify path to it when you want to run it
+(or use g.extension on Linux and macOS).
 The script is in this repo: <https://github.com/ncsu-geoforall-lab/v.out.keplergl/>.
-This is optional dependency for visualization (and publishing).
+This is only an optional dependency for visualization (and publishing).
 
 For running the sewershed workflow in R, you need:
 
