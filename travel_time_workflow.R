@@ -72,7 +72,7 @@ execGRASS("v.in.ogr", input=data_source, layer=sewer)
 execGRASS("g.region", vector=sewer)
 
 # This will take a lot of time.
-# Using higher memory (RAM) and nprocs (number of subprocesses) may
+# Using higher memory (RAM) and nprocs (number of sub-processes) may
 # speed it up if the computer has the resources.
 execGRASS("r.in.usgs", flags="k", product="ned", output_name="dem", output_directory=usgs_cache, ned_dataset="ned13sec", memory=16000, nprocs=4)
 
@@ -112,7 +112,7 @@ execGRASS("r.out.gdal", input="cost", output="cost.tif", format="GTiff")
 # request to rewrite the data is needed. To set this globally to overwrite data
 # created by GRASS as R replaces content of variables, call:
 # Sys.setenv(GRASS_OVERWRITE = "1")
-# Alternativelly, enable it just for one call, by adding this parameter to the
+# Alternatively, enable it just for one call, by adding this parameter to the
 # execGRASS call:
 # flags=c("overwrite")
 

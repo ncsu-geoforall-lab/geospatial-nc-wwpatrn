@@ -17,6 +17,7 @@ db.in.ogr input=data/pipe_roughness.csv output=pipe_roughness_table
 v.db.join map=lines column=MATERIAL other_table=pipe_roughness_table other_column=MATERIAL
 
 v.db.update map=lines column=roughness query_column="cast(n as DOUBLE)"
+# See also the R workflow for additional roughness processing.
 
 v.db.pyupdate map=lines column=facility_id_int expression="int(FACILITYID[4:])" where="FACILITYID IS NOT NULL AND FACILITYID != ''"
 v.db.pyupdate map=lines column=facility_id_int expression="1" where="FACILITYID IS NULL OR FACILITYID == ''"

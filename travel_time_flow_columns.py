@@ -59,8 +59,10 @@ def main():
         "v.db.update", map=vector, column=diameter, value=1, where=f"{diameter} == 0"
     )
 
-    add_float_column_sql(vector, "diameter_ft", f"(1.0 * {diameter}) / 12")  # inch to feet
-    add_float_column_sql(vector, "radius_ft", "diameter_ft / 2")  # r = d / 2
+    # inch to feet
+    add_float_column_sql(vector, "diameter_ft", f"(1.0 * {diameter}) / 12")
+    # r = d / 2
+    add_float_column_sql(vector, "radius_ft", "diameter_ft / 2")
     add_float_column_sql(
         vector, "liquid_height", f"{liquid_height_coefficient} * diameter_ft"
     )
@@ -72,8 +74,6 @@ def main():
     )
     add_float_column_sql(vector, "wetted_perimeter", "radius_ft * theta")
     add_float_column_sql(vector, "hydraulic_radius", "cs_area / wetted_perimeter")
-
-    # TODO: roughness column
 
 
 if __name__ == "__main__":
